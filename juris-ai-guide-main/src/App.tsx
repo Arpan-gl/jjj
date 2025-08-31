@@ -18,11 +18,18 @@ import ContractComparisonPage from "./pages/contractComparisonPage";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import MembershipPage from "./pages/JOIN";
-const queryClient = new QueryClient();
+import LegalCommunity from "./pages/LegalCommunity";
+import AdminLawyerVerification from "./components/AdminLawyerVerification";
+import AdminDashboard from "./components/AdminDashboard";
+import AdminLayout from "./components/AdminLayout";
+import PrivateRoute from "./components/PrivateRoute";
+import AdminRoute from "./components/AdminRoute";
+import DebugRedux from "./components/DebugRedux";
 import { Provider } from "react-redux";
 import { store } from "./store/store";
-import PrivateRoute from "./components/PrivateRoute";
-import SignOut from "./pages/signOut";
+import SignOut from "./pages/SignOut";
+
+const queryClient = new QueryClient();
 
 const App = () => {
   return (
@@ -31,6 +38,7 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <DebugRedux />
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
@@ -64,6 +72,29 @@ const App = () => {
                   </PrivateRoute>
                 }
               />
+              <Route
+                path="/legal-community"
+                element={
+                  <PrivateRoute>
+                    <LegalCommunity />
+                  </PrivateRoute>
+                }
+              />
+                      <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminLayout />
+            </AdminRoute>
+          }
+        >
+          <Route index element={<AdminDashboard />} />
+          <Route path="users" element={<AdminDashboard />} />
+          <Route path="lawyers" element={<AdminDashboard />} />
+          <Route path="applications" element={<AdminDashboard />} />
+          <Route path="analytics" element={<AdminDashboard />} />
+          <Route path="settings" element={<AdminDashboard />} />
+        </Route>
               <Route path="/signUp" element={<SignUp />} />
               <Route path="/signIn" element={<SignIn />} />
               <Route path="/signOut" element={<SignOut />} />

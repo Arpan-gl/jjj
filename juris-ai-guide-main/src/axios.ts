@@ -5,4 +5,24 @@ const instance = axios.create({
     withCredentials:true
 });
 
+// Add request interceptor to include JWT token in Authorization header
+instance.interceptors.request.use(
+    (config) => {
+        // Get token from cookies
+        const token = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('token='))
+            ?.split('=')[1];
+        
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
+
 export default instance;

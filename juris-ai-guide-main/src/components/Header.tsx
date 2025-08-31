@@ -1,8 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X, ChevronDown } from 'lucide-react';
+import { Menu, X, ChevronDown, User, CheckCircle } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
 
 interface store {
     isLogin: boolean;
@@ -10,12 +20,36 @@ interface store {
 
 const Header = () => {
   const isLogin = useSelector((state: store) => state.isLogin);
+  const [user, setUser] = useState<any>(null);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const location = useLocation();
   const dropdownRef = useRef(null);
+
+  // Fetch user profile when logged in
+  useEffect(() => {
+    if (isLogin) {
+      fetchUserProfile();
+    }
+  }, [isLogin]);
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await fetch('/api/getUserDetail', {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setUser(data.data);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
 
   // Track scroll position for header styling
   useEffect(() => {
@@ -59,6 +93,7 @@ const Header = () => {
         { name: 'Contract Analyzer', path: '/contract-analyzer' },
         { name: 'AI Lawyer', path: '/ai-lawyer' },
         { name: 'Contract Comparison', path: '/contract-comparison' },
+        { name: 'Legal Community', path: '/legal-community' },
       ]
     },
     { name: 'Features', path: '/features' },
@@ -179,15 +214,64 @@ const Header = () => {
             
             <div className="h-4 border-l border-gray-300 dark:border-gray-700"></div>
             
-            {accountNavItems.map((item) => (
-              <Link
-                key={item.name}
-                to={item.path}
-                className="text-sm font-medium text-gray-700 hover:text-juris-primary transition-colors dark:text-gray-200 dark:hover:text-juris-secondary"
-              >
-                {item.name}
-              </Link>
-            ))}
+            {isLogin && user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src="/avatars/01.png" alt={user.username} />
+                      <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{user.username}</p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                      </p>
+                      {user.role && (
+                        <Badge variant="outline" className="w-fit">
+                          {user.role === 'lawyer' ? 'Lawyer' : user.role === 'admin' ? 'Admin' : 'User'}
+                        </Badge>
+                      )}
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/legal-community">
+                      <User className="mr-2 h-4 w-4" />
+                      Legal Community
+                    </Link>
+                  </DropdownMenuItem>
+                  {user.role === 'admin' && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/lawyer-verification">
+                        <CheckCircle className="mr-2 h-4 w-4" />
+                        Lawyer Verification
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/signout">
+                      Sign Out
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              accountNavItems.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  className="text-sm font-medium text-gray-700 hover:text-juris-primary transition-colors dark:text-gray-200 dark:hover:text-juris-secondary"
+                >
+                  {item.name}
+                </Link>
+              ))
+            )}
             
             <Button size="sm" className="bg-juris-primary hover:bg-juris-primary/90 text-white" asChild>
               <Link to="/ai-lawyer">Get Started</Link>
@@ -234,15 +318,60 @@ const Header = () => {
               
               <div className="my-2 border-t border-gray-100 dark:border-gray-800"></div>
               
-              {accountNavItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  className="text-sm font-medium text-gray-700 hover:text-juris-primary hover:bg-gray-50 transition-colors block px-3 py-2 rounded-md dark:text-gray-200 dark:hover:text-juris-secondary dark:hover:bg-gray-900"
-                >
-                  {item.name}
-                </Link>
-              ))}
+              {isLogin && user ? (
+                <>
+                  <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-800">
+                    <div className="flex items-center space-x-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src="/avatars/01.png" alt={user.username} />
+                        <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{user.username}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
+                        {user.role && (
+                          <Badge variant="outline" className="text-xs">
+                            {user.role === 'lawyer' ? 'Lawyer' : user.role === 'admin' ? 'Admin' : 'User'}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <Link
+                    to="/legal-community"
+                    className="text-sm font-medium text-gray-700 hover:text-juris-primary hover:bg-gray-50 transition-colors block px-3 py-2 rounded-md dark:text-gray-200 dark:hover:text-juris-secondary dark:hover:bg-gray-900"
+                  >
+                    Legal Community
+                  </Link>
+                  
+                  {user.role === 'admin' && (
+                    <Link
+                      to="/admin/lawyer-verification"
+                      className="text-sm font-medium text-gray-700 hover:text-juris-primary hover:bg-gray-50 transition-colors block px-3 py-2 rounded-md dark:text-gray-200 dark:hover:text-juris-secondary dark:hover:bg-gray-900"
+                    >
+                      Lawyer Verification
+                    </Link>
+                  )}
+                  
+                  <Link
+                    to="/signout"
+                    className="text-sm font-medium text-gray-700 hover:text-juris-primary hover:bg-gray-50 transition-colors block px-3 py-2 rounded-md dark:text-gray-200 dark:hover:text-juris-secondary dark:hover:bg-gray-900"
+                  >
+                    Sign Out
+                  </Link>
+                </>
+              ) : (
+                accountNavItems.map((item) => (
+                  <Link
+                    key={item.name}
+                    to={item.path}
+                    className="text-sm font-medium text-gray-700 hover:text-juris-primary hover:bg-gray-50 transition-colors block px-3 py-2 rounded-md dark:text-gray-200 dark:hover:text-juris-secondary dark:hover:bg-gray-900"
+                  >
+                    {item.name}
+                  </Link>
+                ))
+              )}
               
               <div className="pt-2">
                 <Button size="sm" className="w-full bg-juris-primary hover:bg-juris-primary/90" asChild>

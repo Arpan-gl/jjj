@@ -33,7 +33,8 @@ const SignIn = () => {
       console.log("SignIn response:", data);
 
       if (data.success) {
-        dispatch(login({ email: formData.email }));
+        // Store complete user object including role
+        dispatch(login({ user: data.user }));
         toast({
           title: "Success",
           description: data.message || "Signed in successfully",

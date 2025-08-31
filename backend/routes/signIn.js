@@ -30,7 +30,23 @@ router.post("/",async (req,res) => {
             secure: process.env.NODE_ENV === 'production', // Only secure in production
         }
 
-        return  res.cookie("token",token,options).status(200).json({success:true,message:"user sign in successfully",data:userExist,token:token});
+        // Return user object without password
+        const userResponse = {
+            _id: userExist._id,
+            username: userExist.username,
+            email: userExist.email,
+            role: userExist.role,
+            isActive: userExist.isActive,
+            createdAt: userExist.createdAt,
+            lastLogin: userExist.lastLogin
+        };
+        
+        return res.cookie("token",token,options).status(200).json({
+            success: true,
+            message: "user sign in successfully",
+            user: userResponse,
+            token: token
+        });
     } catch (error) {
         console.log(error);
         return res.status(500).json({success:false,message:"User not sign in"});
