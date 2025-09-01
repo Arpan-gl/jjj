@@ -25,86 +25,119 @@ import AdminLayout from "./components/AdminLayout";
 import PrivateRoute from "./components/PrivateRoute";
 import AdminRoute from "./components/AdminRoute";
 import DebugRedux from "./components/DebugRedux";
-import { Provider } from "react-redux";
-import { store } from "./store/store";
 import SignOut from "./pages/SignOut";
+import axios from './axios';
+import { useDispatch } from 'react-redux';
+import { login } from '@/store/reducer';
+
+interface User {
+  email: string;
+  username: string;
+  role: 'user' | 'lawyer' | 'admin';
+  _id: string;
+}
 
 const queryClient = new QueryClient();
 
 const App = () => {
+  const dispatch = useDispatch();
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await axios.get("/getUserDetail");
+        if (res.data && res.data.data) {
+          dispatch(login({ user: res.data.data }));
+        }
+      } catch (error) {
+        // Not logged in or error, do nothing
+      } finally {
+        setAuthChecked(true);
+      }
+    })();
+  }, [dispatch]);
+
+  if (!authChecked) {
+    // Show a loading spinner or blank screen while checking auth
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
-    <Provider store={store}>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <DebugRedux />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/features" element={<Features />} />
-              <Route path="/faqs" element={<Faqs />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/disclaimer" element={<Disclaimer />} />
-              <Route
-                path="/contract-analyzer"
-                element={
-                  <PrivateRoute>
-                    <ContractAnalyzer />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/ai-lawyer"
-                element={
-                  <PrivateRoute>
-                    <AILawyer />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/contract-comparison"
-                element={
-                  <PrivateRoute>
-                    <ContractComparisonPage />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/legal-community"
-                element={
-                  <PrivateRoute>
-                    <LegalCommunity />
-                  </PrivateRoute>
-                }
-              />
-                      <Route
-          path="/admin"
-          element={
-            <AdminRoute>
-              <AdminLayout />
-            </AdminRoute>
-          }
-        >
-          <Route index element={<AdminDashboard />} />
-          <Route path="users" element={<AdminDashboard />} />
-          <Route path="lawyers" element={<AdminDashboard />} />
-          <Route path="applications" element={<AdminDashboard />} />
-          <Route path="analytics" element={<AdminDashboard />} />
-          <Route path="settings" element={<AdminDashboard />} />
-        </Route>
-              <Route path="/signUp" element={<SignUp />} />
-              <Route path="/signIn" element={<SignIn />} />
-              <Route path="/signOut" element={<SignOut />} />
-              <Route path="/join" element={<MembershipPage />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </Provider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <DebugRedux />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/features" element={<Features />} />
+            <Route path="/faqs" element={<Faqs />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/disclaimer" element={<Disclaimer />} />
+            <Route
+              path="/contract-analyzer"
+              element={
+                <PrivateRoute>
+                  <ContractAnalyzer />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/ai-lawyer"
+              element={
+                <PrivateRoute>
+                  <AILawyer />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/contract-comparison"
+              element={
+                <PrivateRoute>
+                  <ContractComparisonPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/legal-community"
+              element={
+                <PrivateRoute>
+                  <LegalCommunity />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <AdminLayout />
+                </AdminRoute>
+              }
+            >
+              <Route index element={<AdminDashboard />} />
+              <Route path="users" element={<AdminDashboard />} />
+              <Route path="lawyers" element={<AdminDashboard />} />
+              <Route path="applications" element={<AdminDashboard />} />
+              <Route path="analytics" element={<AdminDashboard />} />
+              <Route path="settings" element={<AdminDashboard />} />
+            </Route>
+            <Route path="/signUp" element={<SignUp />} />
+            <Route path="/signIn" element={<SignIn />} />
+            <Route path="/signOut" element={<SignOut />} />
+            <Route path="/join" element={<MembershipPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 };
 
