@@ -29,6 +29,7 @@ import SignOut from "./pages/SignOut";
 import axios from './axios';
 import { useDispatch } from 'react-redux';
 import { login } from '@/store/reducer';
+import IssueDetail from "./pages/IssueDetail";
 
 interface User {
   email: string;
@@ -115,6 +116,14 @@ const App = () => {
               }
             />
             <Route
+              path="/legal-community/:id"
+              element={
+                <PrivateRoute>
+                  <IssueDetail />
+                </PrivateRoute>
+              }
+            />
+            <Route
               path="/admin"
               element={
                 <AdminRoute>
@@ -123,11 +132,10 @@ const App = () => {
               }
             >
               <Route index element={<AdminDashboard />} />
-              <Route path="users" element={<AdminDashboard />} />
-              <Route path="lawyers" element={<AdminDashboard />} />
-              <Route path="applications" element={<AdminDashboard />} />
+              <Route path="user-management" element={<AdminDashboard />} />
+              <Route path="lawyer-verification" element={<AdminLawyerVerification />} />
               <Route path="analytics" element={<AdminDashboard />} />
-              <Route path="settings" element={<AdminDashboard />} />
+              <Route path="system-settings" element={<AdminDashboard />} />
             </Route>
             <Route path="/signUp" element={<SignUp />} />
             <Route path="/signIn" element={<SignIn />} />

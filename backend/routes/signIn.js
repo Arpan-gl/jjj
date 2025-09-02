@@ -40,7 +40,7 @@ router.post("/",async (req,res) => {
             createdAt: userExist.createdAt,
             lastLogin: userExist.lastLogin
         };
-        
+                
         return res.cookie("token",token,options).status(200).json({
             success: true,
             message: "user sign in successfully",
