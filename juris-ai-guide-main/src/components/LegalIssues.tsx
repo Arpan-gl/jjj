@@ -366,7 +366,7 @@ const LegalIssues: React.FC<LegalIssuesProps> = ({ onPostIssue, onViewIssue }) =
                     <div className="flex-1">
                       <h3 
                         className="text-xl font-semibold hover:text-primary cursor-pointer"
-                        onClick={() => onViewIssue?.(issue)}
+                        onClick={() => navigate(`/legal-community/${issue._id}`)}
                       >
                         {issue.title}
                       </h3>
@@ -438,7 +438,7 @@ const LegalIssues: React.FC<LegalIssuesProps> = ({ onPostIssue, onViewIssue }) =
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => onViewIssue?.(issue)}
+                      onClick={() => navigate(`/legal-community/${issue._id}`)}
                       className="flex items-center gap-2"
                     >
                       <MessageCircle className="h-4 w-4" />

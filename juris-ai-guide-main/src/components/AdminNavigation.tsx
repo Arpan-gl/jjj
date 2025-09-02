@@ -41,21 +41,14 @@ const AdminNavigation = ({ isOpen, onToggle, stats }: AdminNavigationProps) => {
     },
     {
       name: 'User Management',
-      href: '/admin/users',
+      href: '/admin/user-management',
       icon: Users,
       description: 'Manage all users and accounts',
       badge: stats?.totalUsers
     },
     {
-      name: 'Lawyer Management',
-      href: '/admin/lawyers',
-      icon: Briefcase,
-      description: 'Manage verified lawyers',
-      badge: stats?.totalLawyers
-    },
-    {
-      name: 'Applications',
-      href: '/admin/applications',
+      name: 'Lawyer Verification',
+      href: '/admin/lawyer-verification',
       icon: FileText,
       description: 'Review lawyer applications',
       badge: stats?.pendingApplications
@@ -68,7 +61,7 @@ const AdminNavigation = ({ isOpen, onToggle, stats }: AdminNavigationProps) => {
     },
     {
       name: 'System Settings',
-      href: '/admin/settings',
+      href: '/admin/system-settings',
       icon: Settings,
       description: 'Platform configuration'
     }

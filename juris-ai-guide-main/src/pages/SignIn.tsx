@@ -40,9 +40,14 @@ const SignIn = () => {
           description: data.message || "Signed in successfully",
           variant: "default",
         });
-        
         // Navigate after successful sign in
-        setTimeout(() => navigate("/"), 1000);
+        setTimeout(() => {
+          if(data.user.role === "admin"){
+            navigate("/admin");
+          }else{
+            navigate("/");
+          }
+        }, 1000);
       } else {
         toast({
           title: "Error",

@@ -126,7 +126,48 @@ const LegalCommunity = () => {
           </p>
         </div>
         
-        <LawyerApplicationStatus />
+        <div className="max-w-2xl mx-auto">
+          <Card className="border-orange-200 bg-orange-50/50">
+            <CardHeader className="text-center">
+              <div className="mx-auto w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+                <Clock className="h-8 w-8 text-orange-600" />
+              </div>
+              <CardTitle className="text-orange-800">Verification Pending</CardTitle>
+              <CardDescription className="text-orange-700">
+                Your lawyer application is currently under review by our admin team.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-center space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-center gap-2">
+                  <Badge className={getLawyerStatusColor(user.lawyerProfile?.verificationStatus || 'pending')}>
+                    {getLawyerStatusIcon(user.lawyerProfile?.verificationStatus || 'pending')}
+                    {user.lawyerProfile?.verificationStatus?.toUpperCase() || 'PENDING'}
+                  </Badge>
+                </div>
+                {user.lawyerProfile?.applicationDate && (
+                  <p className="text-sm text-orange-600">
+                    Applied on: {new Date(user.lawyerProfile.applicationDate).toLocaleDateString()}
+                  </p>
+                )}
+              </div>
+              
+              <div className="text-sm text-orange-700 bg-orange-100 p-4 rounded-lg">
+                <p className="font-medium mb-2">What happens next?</p>
+                <ul className="text-left space-y-1">
+                  <li>• Our admin team will review your application</li>
+                  <li>• We'll verify your credentials and documents</li>
+                  <li>• You'll receive an email notification once verified</li>
+                  <li>• After verification, you can start helping clients</li>
+                </ul>
+              </div>
+              
+              <p className="text-xs text-orange-600">
+                This process typically takes 2-3 business days. Thank you for your patience!
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }

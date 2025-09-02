@@ -1,195 +1,164 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  UserPlus, 
+  User, 
   Mail, 
   Lock, 
-  Eye, 
-  EyeOff,
-  Briefcase,
-  GraduationCap,
-  MapPin,
-  Phone,
-  Globe,
+  Briefcase, 
+  Building, 
+  MapPin, 
+  Phone, 
+  Globe, 
+  Award, 
   FileText,
-  Award,
-  Users,
-  Plus,
-  X
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
-import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
-import Header from '@/components/Header';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from '../axios';
-
-interface UserFormData {
-  username: string;
-  email: string;
-  password: string;
-  userType: 'user' | 'lawyer';
-}
-
-interface LawyerFormData {
-  // Professional Information
-  barNumber: string;
-  barAssociation: string;
-  practiceAreas: string[];
-  yearsOfExperience: number;
-  lawSchool: string;
-  graduationYear: number;
-  
-  // Contact Information
-  phone: string;
-  officeAddress: {
-    street: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    country: string;
-  };
-  website: string;
-  
-  // Specializations
-  specializations: string[];
-  languages: string[];
-  
-  // Professional Summary
-  bio: string;
-  achievements: string[];
-  
-  // References
-  references: Array<{
-    name: string;
-    title: string;
-    organization: string;
-    email: string;
-    phone: string;
-    relationship: string;
-  }>;
-}
 
 const SignUp = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('user');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [userType, setUserType] = useState<'user' | 'lawyer'>('user');
   
-  // User form data
-  const [userFormData, setUserFormData] = useState<UserFormData>({
-    username: "",
-    email: "",
-    password: "",
-    userType: 'user'
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
   });
 
-  // Lawyer form data
-  const [lawyerFormData, setLawyerFormData] = useState<LawyerFormData>({
+  const [lawyerData, setLawyerData] = useState({
     barNumber: '',
     barAssociation: '',
-    practiceAreas: [],
-    yearsOfExperience: 0,
+    practiceAreas: [''],
+    yearsOfExperience: '',
     lawSchool: '',
-    graduationYear: new Date().getFullYear(),
+    graduationYear: '',
     phone: '',
     officeAddress: {
       street: '',
       city: '',
       state: '',
       zipCode: '',
-      country: 'USA'
+      country: ''
     },
     website: '',
-    specializations: [],
-    languages: [],
+    specializations: [''],
+    languages: [''],
     bio: '',
-    achievements: [],
-    references: []
+    achievements: ['']
   });
 
-  // Form helpers
-  const [newPracticeArea, setNewPracticeArea] = useState('');
-  const [newSpecialization, setNewSpecialization] = useState('');
-  const [newLanguage, setNewLanguage] = useState('');
-  const [newAchievement, setNewAchievement] = useState('');
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
-  const practiceAreaOptions = [
-    'Criminal Law', 'Civil Law', 'Family Law', 'Corporate Law', 
-    'Property Law', 'Employment Law', 'Intellectual Property', 
-    'Tax Law', 'Environmental Law', 'Immigration Law', 'Other'
-  ];
-
-  const stateOptions = [
-    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
-    'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
-    'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
-    'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
-    'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
-  ];
-
-  const handleUserSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const response = await axios.post("/signUp", {
-        ...userFormData,
-        userType: 'user'
-      });
-
-      if (response.data.success) {
-        toast({
-          title: "Success",
-          description: "Account created successfully!",
-          variant: "default",
-        });
-        setTimeout(() => navigate("/signIn"), 1000);
-      }
-    } catch (error: any) {
-      console.error("Error:", error);
-      const errorMessage = error?.response?.data?.message || "Something went wrong. Please try again.";
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+  const handleLawyerDataChange = (field: string, value: any) => {
+    if (field.includes('.')) {
+      const [parent, child] = field.split('.');
+      setLawyerData(prev => ({
+        ...prev,
+        [parent]: { ...prev[parent as keyof typeof prev], [child]: value }
+      }));
+    } else {
+      setLawyerData(prev => ({ ...prev, [field]: value }));
     }
   };
 
-  const handleLawyerSubmit = async (e: React.FormEvent) => {
+  const handleArrayFieldChange = (field: string, index: number, value: string) => {
+    setLawyerData(prev => {
+      const newArray = [...(prev[field as keyof typeof prev] as string[])];
+      newArray[index] = value;
+      return { ...prev, [field]: newArray };
+    });
+  };
+
+  const addArrayField = (field: string) => {
+    setLawyerData(prev => ({
+      ...prev,
+      [field]: [...(prev[field as keyof typeof prev] as string[]), '']
+    }));
+  };
+
+  const removeArrayField = (field: string, index: number) => {
+    setLawyerData(prev => {
+      const newArray = [...(prev[field as keyof typeof prev] as string[])];
+      newArray.splice(index, 1);
+      return { ...prev, [field]: newArray };
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
-    try {
-      const response = await axios.post("/signUp", {
-        ...userFormData,
-        userType: 'lawyer',
-        lawyerData: lawyerFormData
+    
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Passwords do not match",
+        variant: "destructive",
       });
+      return;
+    }
 
+    if (userType === 'lawyer') {
+      // Validate required lawyer fields
+      const requiredFields = ['barNumber', 'barAssociation', 'practiceAreas', 'yearsOfExperience', 'lawSchool', 'graduationYear', 'phone', 'bio'];
+      for (const field of requiredFields) {
+        if (field === 'practiceAreas') {
+          if (!lawyerData.practiceAreas[0] || lawyerData.practiceAreas[0].trim() === '') {
+            toast({
+              title: "Error",
+              description: "At least one practice area is required",
+              variant: "destructive",
+            });
+            return;
+          }
+        } else if (!lawyerData[field as keyof typeof lawyerData]) {
+          toast({
+            title: "Error",
+            description: `${field.charAt(0).toUpperCase() + field.slice(1)} is required`,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+    }
+
+    setLoading(true);
+    try {
+      const signupData = {
+        ...formData,
+        userType,
+        ...(userType === 'lawyer' && { lawyerData })
+      };
+
+      const response = await axios.post('/signUp', signupData);
+      
       if (response.data.success) {
         toast({
           title: "Success",
           description: response.data.message,
           variant: "default",
         });
-        setTimeout(() => navigate("/signIn"), 1000);
+        
+        // Redirect to sign in page
+        navigate('/signIn');
       }
     } catch (error: any) {
-      console.error("Error:", error);
-      const errorMessage = error?.response?.data?.message || "Something went wrong. Please try again.";
+      console.error('Signup error:', error);
       toast({
         title: "Error",
-        description: errorMessage,
+        description: error?.response?.data?.message || "Failed to create account",
         variant: "destructive",
       });
     } finally {
@@ -197,707 +166,355 @@ const SignUp = () => {
     }
   };
 
-  // Helper functions for lawyer form
-  const addPracticeArea = () => {
-    if (newPracticeArea.trim() && !lawyerFormData.practiceAreas.includes(newPracticeArea.trim())) {
-      setLawyerFormData(prev => ({
-        ...prev,
-        practiceAreas: [...prev.practiceAreas, newPracticeArea.trim()]
-      }));
-      setNewPracticeArea('');
-    }
-  };
-
-  const removePracticeArea = (area: string) => {
-    setLawyerFormData(prev => ({
-      ...prev,
-      practiceAreas: prev.practiceAreas.filter(a => a !== area)
-    }));
-  };
-
-  const addSpecialization = () => {
-    if (newSpecialization.trim() && !lawyerFormData.specializations.includes(newSpecialization.trim())) {
-      setLawyerFormData(prev => ({
-        ...prev,
-        specializations: [...prev.specializations, newSpecialization.trim()]
-      }));
-      setNewSpecialization('');
-    }
-  };
-
-  const removeSpecialization = (spec: string) => {
-    setLawyerFormData(prev => ({
-      ...prev,
-      specializations: prev.specializations.filter(s => s !== spec)
-    }));
-  };
-
-  const addLanguage = () => {
-    if (newLanguage.trim() && !lawyerFormData.languages.includes(newLanguage.trim())) {
-      setLawyerFormData(prev => ({
-        ...prev,
-        languages: [...prev.languages, newLanguage.trim()]
-      }));
-      setNewLanguage('');
-    }
-  };
-
-  const removeLanguage = (lang: string) => {
-    setLawyerFormData(prev => ({
-      ...prev,
-      languages: prev.languages.filter(l => l !== lang)
-    }));
-  };
-
-  const addAchievement = () => {
-    if (newAchievement.trim() && !lawyerFormData.achievements.includes(newAchievement.trim())) {
-      setLawyerFormData(prev => ({
-        ...prev,
-        achievements: [...prev.achievements, newAchievement.trim()]
-      }));
-      setNewAchievement('');
-    }
-  };
-
-  const removeAchievement = (achievement: string) => {
-    setLawyerFormData(prev => ({
-      ...prev,
-      achievements: prev.achievements.filter(a => a !== achievement)
-    }));
-  };
-
-  const addReference = () => {
-    setLawyerFormData(prev => ({
-      ...prev,
-      references: [...prev.references, {
-        name: '',
-        title: '',
-        organization: '',
-        email: '',
-        phone: '',
-        relationship: ''
-      }]
-    }));
-  };
-
-  const removeReference = (index: number) => {
-    setLawyerFormData(prev => ({
-      ...prev,
-      references: prev.references.filter((_, i) => i !== index)
-    }));
-  };
-
-  const updateReference = (index: number, field: string, value: string) => {
-    setLawyerFormData(prev => ({
-      ...prev,
-      references: prev.references.map((ref, i) => 
-        i === index ? { ...ref, [field]: value } : ref
-      )
-    }));
-  };
-
   return (
-    <>
-      <Header />
-      <div className='w-full h-full flex flex-col justify-center items-center p-4 min-h-screen bg-gray-50'>
-        <Card className="w-full max-w-4xl shadow-xl">
-          <CardHeader className="text-center">
-            <div className="flex items-center justify-center mb-4">
-              <UserPlus className="h-10 w-10 text-primary" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <Card className="w-full max-w-4xl">
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl font-bold">Create Your Account</CardTitle>
+          <CardDescription>
+            Join our legal community and get started with your legal journey
+          </CardDescription>
+        </CardHeader>
+        
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* User Type Selection */}
+            <div className="text-center">
+              <Label className="text-lg font-medium mb-4 block">I want to register as:</Label>
+              <div className="flex gap-4 justify-center">
+                <Button
+                  type="button"
+                  variant={userType === 'user' ? 'default' : 'outline'}
+                  onClick={() => setUserType('user')}
+                  className="flex items-center gap-2"
+                >
+                  <User className="h-4 w-4" />
+                  Legal Client
+                </Button>
+                <Button
+                  type="button"
+                  variant={userType === 'lawyer' ? 'default' : 'outline'}
+                  onClick={() => setUserType('lawyer')}
+                  className="flex items-center gap-2"
+                >
+                  <Briefcase className="h-4 w-4" />
+                  Lawyer
+                </Button>
+              </div>
             </div>
-            <CardTitle className="text-2xl">Create an Account</CardTitle>
-            <CardDescription>
-              Choose your account type and get started
-            </CardDescription>
-          </CardHeader>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="user" className="flex items-center gap-2">
-                <UserPlus className="h-4 w-4" />
-                Regular User
-              </TabsTrigger>
-              <TabsTrigger value="lawyer" className="flex items-center gap-2">
-                <Briefcase className="h-4 w-4" />
-                Lawyer
-              </TabsTrigger>
-            </TabsList>
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="username">Username *</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="username"
+                    type="text"
+                    placeholder="Enter username"
+                    value={formData.username}
+                    onChange={(e) => handleInputChange('username', e.target.value)}
+                    className="pl-9"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="email">Email *</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    className="pl-9"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
 
-            {/* Regular User Tab */}
-            <TabsContent value="user">
-              <form onSubmit={handleUserSubmit}>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="username">Username</Label>
-                    <div className="relative">
-                      <UserPlus className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="username"
-                        placeholder="username"
-                        type="text"
-                        className="pl-9"
-                        value={userFormData.username}
-                        onChange={(e) => setUserFormData({ ...userFormData, username: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="password">Password *</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter password"
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    className="pl-9"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="Confirm password"
+                    value={formData.confirmPassword}
+                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                    className="pl-9"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="email"
-                        placeholder="m@example.com"
-                        type="email"
-                        className="pl-9"
-                        value={userFormData.email}
-                        onChange={(e) => setUserFormData({ ...userFormData, email: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        className="pl-9 pr-9"
-                        placeholder="password"
-                        value={userFormData.password}
-                        onChange={(e) => setUserFormData({ ...userFormData, password: e.target.value })}
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-3 text-muted-foreground hover:text-primary"
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </CardContent>
-
-                <CardFooter className="flex flex-col gap-4">
-                  <Button className="w-full" type="submit" disabled={loading}>
-                    {loading ? "Creating account..." : "Create User Account"}
-                  </Button>
-                  <p className="text-sm text-center text-muted-foreground">
-                    Already have an account?{" "}
-                    <Link to="/signIn" className="text-primary hover:underline">
-                      Sign in
-                    </Link>
+            {/* Lawyer-Specific Fields */}
+            {userType === 'lawyer' && (
+              <div className="space-y-6 border-t pt-6">
+                <div className="text-center">
+                  <Badge variant="outline" className="flex items-center gap-2 mx-auto w-fit">
+                    <Briefcase className="h-4 w-4" />
+                    Lawyer Registration
+                  </Badge>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Please provide your professional information for verification
                   </p>
-                </CardFooter>
-              </form>
-            </TabsContent>
+                </div>
 
-            {/* Lawyer Tab */}
-            <TabsContent value="lawyer">
-              <form onSubmit={handleLawyerSubmit}>
-                <CardContent className="space-y-6">
-                  {/* Basic User Information */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                      <UserPlus className="h-4 w-4" />
-                      Basic Information
-                    </h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="lawyer-username">Username</Label>
-                        <Input
-                          id="lawyer-username"
-                          placeholder="username"
-                          value={userFormData.username}
-                          onChange={(e) => setUserFormData({ ...userFormData, username: e.target.value })}
-                          required
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="lawyer-email">Email</Label>
-                        <Input
-                          id="lawyer-email"
-                          placeholder="m@example.com"
-                          type="email"
-                          value={userFormData.email}
-                          onChange={(e) => setUserFormData({ ...userFormData, email: e.target.value })}
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="lawyer-password">Password</Label>
-                      <div className="relative">
-                        <Input
-                          id="lawyer-password"
-                          type={showPassword ? "text" : "password"}
-                          className="pr-9"
-                          placeholder="password"
-                          value={userFormData.password}
-                          onChange={(e) => setUserFormData({ ...userFormData, password: e.target.value })}
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-3 text-muted-foreground hover:text-primary"
-                        >
-                          {showPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
+                {/* Professional Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="barNumber">Bar Number *</Label>
+                    <Input
+                      id="barNumber"
+                      placeholder="Enter bar number"
+                      value={lawyerData.barNumber}
+                      onChange={(e) => handleLawyerDataChange('barNumber', e.target.value)}
+                      required
+                    />
                   </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="barAssociation">Bar Association *</Label>
+                    <Input
+                      id="barAssociation"
+                      placeholder="Enter bar association"
+                      value={lawyerData.barAssociation}
+                      onChange={(e) => handleLawyerDataChange('barAssociation', e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
 
-                  {/* Professional Information */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                      <Briefcase className="h-4 w-4" />
-                      Professional Information
-                    </h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="barNumber">Bar Number *</Label>
-                        <Input
-                          id="barNumber"
-                          placeholder="e.g., 12345"
-                          value={lawyerFormData.barNumber}
-                          onChange={(e) => setLawyerFormData({ ...lawyerFormData, barNumber: e.target.value })}
-                          required
-                        />
-                      </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="lawSchool">Law School *</Label>
+                    <Input
+                      id="lawSchool"
+                      placeholder="Enter law school"
+                      value={lawyerData.lawSchool}
+                      onChange={(e) => handleLawyerDataChange('lawSchool', e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="graduationYear">Graduation Year *</Label>
+                    <Input
+                      id="graduationYear"
+                      type="number"
+                      placeholder="Enter graduation year"
+                      value={lawyerData.graduationYear}
+                      onChange={(e) => handleLawyerDataChange('graduationYear', e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="barAssociation">Bar Association *</Label>
-                        <Input
-                          id="barAssociation"
-                          placeholder="e.g., California State Bar"
-                          value={lawyerFormData.barAssociation}
-                          onChange={(e) => setLawyerFormData({ ...lawyerFormData, barAssociation: e.target.value })}
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="lawSchool">Law School *</Label>
-                        <Input
-                          id="lawSchool"
-                          placeholder="e.g., Harvard Law School"
-                          value={lawyerFormData.lawSchool}
-                          onChange={(e) => setLawyerFormData({ ...lawyerFormData, lawSchool: e.target.value })}
-                          required
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="graduationYear">Graduation Year *</Label>
-                        <Input
-                          id="graduationYear"
-                          type="number"
-                          placeholder="e.g., 2020"
-                          value={lawyerFormData.graduationYear}
-                          onChange={(e) => setLawyerFormData({ ...lawyerFormData, graduationYear: parseInt(e.target.value) || 0 })}
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="yearsOfExperience">Years of Experience *</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="yearsOfExperience">Years of Experience *</Label>
+                    <Input
+                      id="yearsOfExperience"
+                      type="number"
+                      placeholder="Enter years of experience"
+                      value={lawyerData.yearsOfExperience}
+                      onChange={(e) => handleLawyerDataChange('yearsOfExperience', e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number *</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
-                        id="yearsOfExperience"
-                        type="number"
-                        placeholder="e.g., 5"
-                        value={lawyerFormData.yearsOfExperience}
-                        onChange={(e) => setLawyerFormData({ ...lawyerFormData, yearsOfExperience: parseInt(e.target.value) || 0 })}
+                        id="phone"
+                        type="tel"
+                        placeholder="Enter phone number"
+                        value={lawyerData.phone}
+                        onChange={(e) => handleLawyerDataChange('phone', e.target.value)}
+                        className="pl-9"
                         required
                       />
                     </div>
-
-                    {/* Practice Areas */}
-                    <div className="space-y-2">
-                      <Label>Practice Areas *</Label>
-                      <div className="flex gap-2">
-                        <Select onValueChange={(value) => {
-                          if (value && !lawyerFormData.practiceAreas.includes(value)) {
-                            setLawyerFormData(prev => ({
-                              ...prev,
-                              practiceAreas: [...prev.practiceAreas, value]
-                            }));
-                          }
-                        }}>
-                          <SelectTrigger className="flex-1">
-                            <SelectValue placeholder="Select practice area" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {practiceAreaOptions.map((area) => (
-                              <SelectItem key={area} value={area}>
-                                {area}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Button type="button" onClick={addPracticeArea} variant="outline" size="sm">
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      {lawyerFormData.practiceAreas.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {lawyerFormData.practiceAreas.map((area, index) => (
-                            <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                              {area}
-                              <button
-                                type="button"
-                                onClick={() => removePracticeArea(area)}
-                                className="ml-1 hover:text-destructive"
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </div>
                   </div>
+                </div>
 
-                  {/* Contact Information */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                      <Phone className="h-4 w-4" />
-                      Contact Information
-                    </h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="phone">Phone Number *</Label>
+                {/* Practice Areas */}
+                <div className="space-y-2">
+                  <Label>Practice Areas *</Label>
+                  <div className="space-y-2">
+                    {lawyerData.practiceAreas.map((area, index) => (
+                      <div key={index} className="flex gap-2">
                         <Input
-                          id="phone"
-                          placeholder="+1 (555) 123-4567"
-                          value={lawyerFormData.phone}
-                          onChange={(e) => setLawyerFormData({ ...lawyerFormData, phone: e.target.value })}
-                          required
+                          placeholder="Enter practice area"
+                          value={area}
+                          onChange={(e) => handleArrayFieldChange('practiceAreas', index, e.target.value)}
+                          required={index === 0}
                         />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="website">Website</Label>
-                        <Input
-                          id="website"
-                          placeholder="https://yourwebsite.com"
-                          value={lawyerFormData.website}
-                          onChange={(e) => setLawyerFormData({ ...lawyerFormData, website: e.target.value })}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Office Address */}
-                    <div className="space-y-4">
-                      <Label>Office Address *</Label>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Input
-                            placeholder="Street Address"
-                            value={lawyerFormData.officeAddress.street}
-                            onChange={(e) => setLawyerFormData({
-                              ...lawyerFormData,
-                              officeAddress: { ...lawyerFormData.officeAddress, street: e.target.value }
-                            })}
-                            required
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Input
-                            placeholder="City"
-                            value={lawyerFormData.officeAddress.city}
-                            onChange={(e) => setLawyerFormData({
-                              ...lawyerFormData,
-                              officeAddress: { ...lawyerFormData.officeAddress, city: e.target.value }
-                            })}
-                            required
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Select
-                            value={lawyerFormData.officeAddress.state}
-                            onValueChange={(value) => setLawyerFormData({
-                              ...lawyerFormData,
-                              officeAddress: { ...lawyerFormData.officeAddress, state: value }
-                            })}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select State" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {stateOptions.map((state) => (
-                                <SelectItem key={state} value={state}>
-                                  {state}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Input
-                            placeholder="ZIP Code"
-                            value={lawyerFormData.officeAddress.zipCode}
-                            onChange={(e) => setLawyerFormData({
-                              ...lawyerFormData,
-                              officeAddress: { ...lawyerFormData.officeAddress, zipCode: e.target.value }
-                            })}
-                            required
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Professional Summary */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      Professional Summary
-                    </h3>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="bio">Professional Bio * (Min 100 characters)</Label>
-                      <Textarea
-                        id="bio"
-                        placeholder="Describe your legal expertise, experience, and approach to helping clients..."
-                        rows={4}
-                        value={lawyerFormData.bio}
-                        onChange={(e) => setLawyerFormData({ ...lawyerFormData, bio: e.target.value })}
-                        required
-                        minLength={100}
-                      />
-                      <p className="text-sm text-muted-foreground">
-                        {lawyerFormData.bio.length}/1000 characters
-                      </p>
-                    </div>
-
-                    {/* Specializations */}
-                    <div className="space-y-2">
-                      <Label>Specializations</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Add specialization"
-                          value={newSpecialization}
-                          onChange={(e) => setNewSpecialization(e.target.value)}
-                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSpecialization())}
-                        />
-                        <Button type="button" onClick={addSpecialization} variant="outline" size="sm">
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      {lawyerFormData.specializations.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {lawyerFormData.specializations.map((spec, index) => (
-                            <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                              {spec}
-                              <button
-                                type="button"
-                                onClick={() => removeSpecialization(spec)}
-                                className="ml-1 hover:text-destructive"
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Languages */}
-                    <div className="space-y-2">
-                      <Label>Languages Spoken</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Add language"
-                          value={newLanguage}
-                          onChange={(e) => setNewLanguage(e.target.value)}
-                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addLanguage())}
-                        />
-                        <Button type="button" onClick={addLanguage} variant="outline" size="sm">
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      {lawyerFormData.languages.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {lawyerFormData.languages.map((lang, index) => (
-                            <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                              {lang}
-                              <button
-                                type="button"
-                                onClick={() => removeLanguage(lang)}
-                                className="ml-1 hover:text-destructive"
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Achievements */}
-                    <div className="space-y-2">
-                      <Label>Professional Achievements</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Add achievement"
-                          value={newAchievement}
-                          onChange={(e) => setNewAchievement(e.target.value)}
-                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addAchievement())}
-                        />
-                        <Button type="button" onClick={addAchievement} variant="outline" size="sm">
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      {lawyerFormData.achievements.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {lawyerFormData.achievements.map((achievement, index) => (
-                            <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                              {achievement}
-                              <button
-                                type="button"
-                                onClick={() => removeAchievement(achievement)}
-                                className="ml-1 hover:text-destructive"
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* References */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <Users className="h-4 w-4" />
-                        Professional References
-                      </h3>
-                      <Button type="button" onClick={addReference} variant="outline" size="sm">
-                        <Plus className="h-4 w-4" />
-                        Add Reference
-                      </Button>
-                    </div>
-                    
-                    {lawyerFormData.references.map((reference, index) => (
-                      <div key={index} className="border rounded-lg p-4 space-y-4">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium">Reference {index + 1}</h4>
+                        {lawyerData.practiceAreas.length > 1 && (
                           <Button
                             type="button"
-                            onClick={() => removeReference(index)}
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
-                            className="text-destructive"
+                            onClick={() => removeArrayField('practiceAreas', index)}
                           >
-                            <X className="h-4 w-4" />
+                            Remove
                           </Button>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>Name</Label>
-                            <Input
-                              placeholder="Full Name"
-                              value={reference.name}
-                              onChange={(e) => updateReference(index, 'name', e.target.value)}
-                            />
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label>Title</Label>
-                            <Input
-                              placeholder="Professional Title"
-                              value={reference.title}
-                              onChange={(e) => updateReference(index, 'title', e.target.value)}
-                            />
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label>Organization</Label>
-                            <Input
-                              placeholder="Company/Organization"
-                              value={reference.organization}
-                              onChange={(e) => updateReference(index, 'organization', e.target.value)}
-                            />
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label>Email</Label>
-                            <Input
-                              placeholder="Email Address"
-                              type="email"
-                              value={reference.email}
-                              onChange={(e) => updateReference(index, 'email', e.target.value)}
-                            />
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label>Phone</Label>
-                            <Input
-                              placeholder="Phone Number"
-                              value={reference.phone}
-                              onChange={(e) => updateReference(index, 'phone', e.target.value)}
-                            />
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label>Relationship</Label>
-                            <Input
-                              placeholder="e.g., Former colleague, Client, etc."
-                              value={reference.relationship}
-                              onChange={(e) => updateReference(index, 'relationship', e.target.value)}
-                            />
-                          </div>
-                        </div>
+                        )}
                       </div>
                     ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addArrayField('practiceAreas')}
+                    >
+                      Add Practice Area
+                    </Button>
                   </div>
-                </CardContent>
+                </div>
 
-                <CardFooter className="flex flex-col gap-4">
-                  <Button className="w-full" type="submit" disabled={loading}>
-                    {loading ? "Submitting application..." : "Submit Lawyer Application"}
-                  </Button>
-                  <p className="text-sm text-center text-muted-foreground">
-                    Already have an account?{" "}
-                    <Link to="/signIn" className="text-primary hover:underline">
-                      Sign in
-                    </Link>
+                {/* Office Address */}
+                <div className="space-y-2">
+                  <Label>Office Address</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                      placeholder="Street Address"
+                      value={lawyerData.officeAddress.street}
+                      onChange={(e) => handleLawyerDataChange('officeAddress.street', e.target.value)}
+                    />
+                    <Input
+                      placeholder="City"
+                      value={lawyerData.officeAddress.city}
+                      onChange={(e) => handleLawyerDataChange('officeAddress.city', e.target.value)}
+                    />
+                    <Input
+                      placeholder="State"
+                      value={lawyerData.officeAddress.state}
+                      onChange={(e) => handleLawyerDataChange('officeAddress.state', e.target.value)}
+                    />
+                    <Input
+                      placeholder="ZIP Code"
+                      value={lawyerData.officeAddress.zipCode}
+                      onChange={(e) => handleLawyerDataChange('officeAddress.zipCode', e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Website */}
+                <div className="space-y-2">
+                  <Label htmlFor="website">Website (Optional)</Label>
+                  <div className="relative">
+                    <Globe className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="website"
+                      type="url"
+                      placeholder="Enter website URL"
+                      value={lawyerData.website}
+                      onChange={(e) => handleLawyerDataChange('website', e.target.value)}
+                      className="pl-9"
+                    />
+                  </div>
+                </div>
+
+                {/* Bio */}
+                <div className="space-y-2">
+                  <Label htmlFor="bio">Professional Summary *</Label>
+                  <Textarea
+                    id="bio"
+                    placeholder="Describe your legal expertise, experience, and approach..."
+                    value={lawyerData.bio}
+                    onChange={(e) => handleLawyerDataChange('bio', e.target.value)}
+                    rows={4}
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Minimum 100 characters. This will be visible to potential clients.
                   </p>
-                </CardFooter>
-              </form>
-            </TabsContent>
-          </Tabs>
-        </Card>
-      </div>
-    </>
+                </div>
+
+                {/* Verification Notice */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+                    <div className="text-sm text-blue-800">
+                      <p className="font-medium mb-1">Verification Required</p>
+                      <p>
+                        After registration, your application will be reviewed by our admin team. 
+                        This process typically takes 2-3 business days. You'll receive an email 
+                        notification once verified.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <Button 
+              type="submit" 
+              className="w-full" 
+              size="lg"
+              disabled={loading}
+            >
+              {loading ? (
+                "Creating Account..."
+              ) : (
+                <>
+                  {userType === 'lawyer' ? (
+                    <>
+                      <Briefcase className="h-4 w-4 mr-2" />
+                      Submit Lawyer Application
+                    </>
+                  ) : (
+                    <>
+                      <User className="h-4 w-4 mr-2" />
+                      Create Account
+                    </>
+                  )}
+                </>
+              )}
+            </Button>
+
+            {/* Sign In Link */}
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">
+                Already have an account?{' '}
+                <Link to="/signIn" className="text-primary hover:underline font-medium">
+                  Sign in here
+                </Link>
+              </p>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

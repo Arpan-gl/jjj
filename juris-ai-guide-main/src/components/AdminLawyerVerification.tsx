@@ -100,7 +100,7 @@ const AdminLawyerVerification = () => {
   
   // Filters and pagination
   const [filters, setFilters] = useState({
-    status: '',
+    status: 'all',
     practiceArea: '',
     state: '',
     search: ''
@@ -114,16 +114,13 @@ const AdminLawyerVerification = () => {
 
   // Review form
   const [reviewForm, setReviewForm] = useState({
-    action: '',
+    action: 'start_review',
     notes: '',
     verificationScore: 100,
     rejectionReason: ''
   });
 
-  useEffect(() => {
-    fetchApplications();
-  }, [filters, pagination.currentPage]);
-
+  
   const fetchApplications = async () => {
     try {
       const params = new URLSearchParams({
@@ -131,10 +128,10 @@ const AdminLawyerVerification = () => {
         limit: pagination.itemsPerPage.toString()
       });
       
-      if (filters.status) params.append('status', filters.status);
+      if (filters.status && filters.status !== 'all') params.append('status', filters.status);
       if (filters.practiceArea) params.append('practiceArea', filters.practiceArea);
       if (filters.state) params.append('state', filters.state);
-
+      
       const response = await axios.get(`/lawyer-applications/admin?${params}`);
       if (response.data.success) {
         setApplications(response.data.data);
@@ -152,6 +149,10 @@ const AdminLawyerVerification = () => {
     }
   };
 
+  useEffect(() => {
+    fetchApplications();
+  }, [filters.status, filters.practiceArea, filters.state, pagination.currentPage]);
+  
   const handleReview = async () => {
     if (!selectedApplication || !reviewForm.action) return;
     
@@ -173,7 +174,7 @@ const AdminLawyerVerification = () => {
         
         // Reset form and refresh
         setReviewForm({
-          action: '',
+          action: 'start_review',
           notes: '',
           verificationScore: 100,
           rejectionReason: ''
@@ -181,11 +182,12 @@ const AdminLawyerVerification = () => {
         setSelectedApplication(null);
         fetchApplications();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error reviewing application:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to review application';
       toast({
         title: "Error",
-        description: error?.response?.data?.message || "Failed to review application",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -290,7 +292,7 @@ const AdminLawyerVerification = () => {
                   <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Statuses</SelectItem>
+                  <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="under_review">Under Review</SelectItem>
                   <SelectItem value="approved">Approved</SelectItem>
@@ -330,7 +332,18 @@ const AdminLawyerVerification = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {filteredApplications.map((application) => (
+            {filteredApplications.length === 0 ? (
+              <div className="text-center py-8">
+                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No Applications Found</h3>
+                <p className="text-muted-foreground">
+                  {filters.search || filters.status !== 'all' || filters.practiceArea || filters.state
+                    ? 'No applications match your current filters. Try adjusting your search criteria.'
+                    : 'There are currently no lawyer applications to review.'}
+                </p>
+              </div>
+            ) : (
+              filteredApplications.map((application) => (
               <div
                 key={application._id}
                 className="border rounded-lg p-4 hover:bg-muted/50 cursor-pointer transition-colors"
@@ -390,7 +403,8 @@ const AdminLawyerVerification = () => {
                   </div>
                 </div>
               </div>
-            ))}
+            ))
+            )}
           </div>
           
           {/* Pagination */}
@@ -501,7 +515,7 @@ const AdminLawyerVerification = () => {
                   </div>
                 </div>
                 
-                {selectedApplication.specializations.length > 0 && (
+                {selectedApplication.specializations && selectedApplication.specializations.length > 0 && (
                   <div>
                     <span className="font-medium text-sm">Specializations:</span>
                     <div className="flex flex-wrap gap-2 mt-1">
@@ -527,7 +541,7 @@ const AdminLawyerVerification = () => {
             <Separator />
 
             {/* References */}
-            {selectedApplication.references.length > 0 && (
+            {selectedApplication.references && selectedApplication.references.length > 0 && (
               <>
                 <div>
                   <h3 className="font-semibold mb-3 flex items-center gap-2">
@@ -609,7 +623,7 @@ const AdminLawyerVerification = () => {
               <div className="flex gap-3 mt-6">
                 <Button
                   onClick={handleReview}
-                  disabled={reviewLoading || !reviewForm.action || (reviewForm.action === 'reject' && !reviewForm.rejectionReason)}
+                  disabled={reviewLoading || reviewForm.action === 'start_review' || (reviewForm.action === 'reject' && !reviewForm.rejectionReason)}
                   className="flex-1"
                 >
                   {reviewLoading ? "Processing..." : `Submit ${reviewForm.action}`}
