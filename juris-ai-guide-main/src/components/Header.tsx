@@ -91,6 +91,7 @@ const Header = () => {
       isDropdown: true,
       children: [
         { name: 'Contract Analyzer', path: '/contract-analyzer' },
+        { name: 'Contract History', path: '/contract-history' },
         { name: 'AI Lawyer', path: '/ai-lawyer' },
         { name: 'Contract Comparison', path: '/contract-comparison' },
         { name: 'Legal Community', path: '/legal-community' },

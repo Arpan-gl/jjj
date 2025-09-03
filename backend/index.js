@@ -14,6 +14,8 @@ import responseRoutes from './routes/responses.js';
 import hireRoutes from './routes/hire.js';
 import lawyerApplicationRoutes from './routes/lawyerApplications.js';
 import adminRoutes from './routes/admin.js';
+import smartContractAnalysisRoutes from './routes/smartContractAnalysis.js';
+import notificationRoutes from './routes/notifications.js';
 
 const app = express();
 
@@ -85,6 +87,8 @@ app.use("/api/responses", responseRoutes);
 app.use("/api/hire", hireRoutes);
 app.use("/api/lawyer-applications", lawyerApplicationRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/smart-contract-analysis", smartContractAnalysisRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

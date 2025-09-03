@@ -13,6 +13,7 @@ import Privacy from "./pages/Privacy";
 import Disclaimer from "./pages/Disclaimer";
 import NotFound from "./pages/NotFound";
 import ContractAnalyzer from "./pages/ContractAnalyzer";
+import ContractHistoryPage from "./pages/ContractHistoryPage";
 import AILawyer from "./pages/AILawyer";
 import ContractComparisonPage from "./pages/contractComparisonPage";
 import SignUp from "./pages/SignUp";
@@ -88,6 +89,14 @@ const App = () => {
               element={
                 <PrivateRoute>
                   <ContractAnalyzer />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/contract-history"
+              element={
+                <PrivateRoute>
+                  <ContractHistoryPage />
                 </PrivateRoute>
               }
             />
